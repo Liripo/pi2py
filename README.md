@@ -21,7 +21,7 @@ uv run pi2py
 根据 LiteLLM 所选模型配置对应的 API Key，例如：
 
 ```bash
-set OPENAI_API_KEY=...
+export OPENAI_API_KEY=...
 uv run pi2py --model gpt-4o-mini -p "List files in this project"
 ```
 
@@ -56,10 +56,3 @@ uv run pi2py tools
 - `src/pi2py/core/session.py`：会话序列化与保存
 - `tests/`：使用 Fake LLM 验证工具调用循环，不依赖真实网络
 
-## 后续方向
-
-- 支持恢复、分叉和导出历史会话
-- 增加项目上下文文件加载，例如 `AGENTS.md` 或 `.pi2py/SYSTEM.md`
-- 支持流式输出和更完整的事件协议
-- 增加工具权限确认和更细粒度的安全策略
-- 扩展 slash commands，例如 `/model`、`/compact`、`/export`

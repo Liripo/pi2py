@@ -1,6 +1,6 @@
 [project]
 name = "pi2py"
-version = "0.1.0"
+version = "0.5.0"
 description = "Python terminal coding agent inspired by pi-agent."
 readme = "README.md"
 requires-python = ">=3.11"
