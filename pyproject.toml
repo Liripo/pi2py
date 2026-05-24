@@ -1,0 +1,40 @@
+[project]
+name = "pi2py"
+version = "0.1.0"
+description = "参考 pi-agent 实现的 Python 终端 Coding Agent。"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "litellm>=1.60.0",
+    "prompt-toolkit>=3.0.48",
+    "typer>=0.12.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.7.0",
+]
+
+[project.scripts]
+pi2py = "pi2py.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.7.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
