@@ -20,6 +20,7 @@ from pi2py import __version__
 from pi2py.core.agent import Agent, AgentConfig
 from pi2py.core.session import SessionStore
 from pi2py.core.settings import DEFAULT_MODEL, SettingsStore
+from pi2py.core.tools import run_bash_command
 
 app = typer.Typer(
     no_args_is_help=False,
@@ -96,7 +97,7 @@ async def _run_print(agent: Agent, prompt: str, mode: str) -> int:
 
 async def _run_interactive(agent: Agent) -> None:
     completer = WordCompleter(
-        ["/help", "/model", "/tools", "/session", "/clear", "/quit", "/exit"],
+        ["/help", "/model", "/tools", "/session", "/clear", "/quit", "/exit", "!"],
         ignore_case=True,
     )
     session: PromptSession[str] = PromptSession(completer=completer)
@@ -116,6 +117,9 @@ async def _run_interactive(agent: Agent) -> None:
         text = text.strip()
         if not text:
             continue
+        if text.startswith("!"):
+            await _run_shell_input(agent, text[1:].strip())
+            continue
         if await _handle_command(agent, text):
             continue
         async for event in agent.run_events(text):
@@ -125,6 +129,18 @@ async def _run_interactive(agent: Agent) -> None:
                 name = event.data.get("name")
                 content = str(event.data.get("content", ""))
                 _console().print(Panel(content[:500], title=f"tool: {name}", border_style="dim"))
+
+
+async def _run_shell_input(agent: Agent, command: str) -> None:
+    if not command:
+        _console().print("[yellow]请输入要执行的命令，例如 !dir[/yellow]")
+        return
+    try:
+        result = await run_bash_command(agent.cwd, command)
+    except ValueError as exc:
+        _console().print(f"[red]{exc}[/red]")
+        return
+    _console().print(Panel(result, title=f"! {command}", border_style="cyan"))
 
 
 async def _handle_command(agent: Agent, text: str) -> bool:
@@ -182,16 +198,17 @@ def _print_banner(agent: Agent) -> None:
     body.add_row("version", __version__)
     body.add_row("model", agent.config.model)
     body.add_row("cwd", str(agent.cwd))
-    body.add_row("commands", "/help  /model  /tools  /session  /clear  /quit")
+    body.add_row("commands", "/help  /model  /tools  !command  /session  /clear  /quit")
     _console().print(Panel(body, title=title, border_style="cyan", padding=(1, 2)))
 
 
 def _print_interactive_help() -> None:
     table = Table(title="pi2py commands", border_style="cyan", show_lines=False)
-    table.add_column("Command", style="green", no_wrap=True)
-    table.add_column("Description")
+    table.add_column("命令", style="green", no_wrap=True)
+    table.add_column("说明")
     table.add_row("/model [name]", "查看或切换模型，并记住本次选择")
     table.add_row("/tools", "查看当前可用工具")
+    table.add_row("!command", "直接执行 bash 命令；仅阻止 rm -rf /")
     table.add_row("/session", "查看当前会话信息")
     table.add_row("/clear", "清空当前上下文")
     table.add_row("/quit", "退出")
@@ -200,8 +217,8 @@ def _print_interactive_help() -> None:
 
 def _print_tools(agent: Agent) -> None:
     table = Table(title="▣ pi2py tools", border_style="cyan", show_lines=False)
-    table.add_column("Tool", style="green", no_wrap=True)
-    table.add_column("Description")
+    table.add_column("工具", style="green", no_wrap=True)
+    table.add_column("说明")
     for tool in agent.tools:
         table.add_row(tool.name, tool.description)
 

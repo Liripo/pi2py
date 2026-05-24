@@ -4,6 +4,7 @@ import asyncio
 import fnmatch
 import json
 import os
+import re
 import subprocess
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -29,6 +30,18 @@ class Tool:
                 "parameters": self.parameters,
             },
         }
+
+
+@dataclass(frozen=True)
+class BashSafetyResult:
+    allowed: bool
+    reason: str | None = None
+
+
+_RM_RF_ROOT_PATTERN = re.compile(
+    r"(^|[\s;&|])rm\s+(?:-[^\s]*r[^\s]*f|-{1,2}recursive\s+-{1,2}force)\s+/{1,2}(?:\s|$)",
+    re.IGNORECASE,
+)
 
 
 def create_default_tools(cwd: Path, *, allow_bash: bool = True) -> list[Tool]:
@@ -114,7 +127,7 @@ def create_default_tools(cwd: Path, *, allow_bash: bool = True) -> list[Tool]:
         tools.append(
             Tool(
                 name="bash",
-                description="在工作区运行 shell 命令，并返回 stdout/stderr。",
+                description="在工作区运行 shell 命令，并返回 stdout/stderr；阻止 rm -rf /。",
                 parameters=_schema(
                     {
                         "command": {"type": "string"},
@@ -126,6 +139,44 @@ def create_default_tools(cwd: Path, *, allow_bash: bool = True) -> list[Tool]:
             )
         )
     return tools
+
+
+def check_bash_safety(command: str) -> BashSafetyResult:
+    stripped = command.strip()
+    if not stripped:
+        return BashSafetyResult(False, "empty command")
+    if _RM_RF_ROOT_PATTERN.search(stripped):
+        return BashSafetyResult(False, "rm -rf / is blocked")
+    return BashSafetyResult(True)
+
+
+async def run_bash_command(root: Path, command: str, timeout: int = 20) -> str:
+    safety = check_bash_safety(command)
+    if not safety.allowed:
+        raise ValueError(f"Unsafe bash command blocked: {safety.reason}")
+
+    resolved_root = root.resolve()
+
+    def run() -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            command,
+            cwd=resolved_root,
+            shell=True,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+        )
+
+    try:
+        completed = await asyncio.to_thread(run)
+    except subprocess.TimeoutExpired:
+        return f"command timed out after {timeout}s"
+    payload = {
+        "exit_code": completed.returncode,
+        "stdout": completed.stdout[-8000:],
+        "stderr": completed.stderr[-8000:],
+    }
+    return json.dumps(payload, ensure_ascii=False)
 
 
 def _schema(properties: dict[str, Any], required: list[str]) -> dict[str, Any]:
@@ -216,29 +267,7 @@ async def _ls(root: Path, args: dict[str, Any]) -> str:
 
 
 async def _bash(root: Path, args: dict[str, Any]) -> str:
-    command = str(args["command"])
-    timeout = int(args.get("timeout", 20))
-
-    def run() -> subprocess.CompletedProcess[str]:
-        return subprocess.run(
-            command,
-            cwd=root,
-            shell=True,
-            text=True,
-            capture_output=True,
-            timeout=timeout,
-        )
-
-    try:
-        completed = await asyncio.to_thread(run)
-    except subprocess.TimeoutExpired:
-        return f"命令在 {timeout} 秒后超时"
-    payload = {
-        "exit_code": completed.returncode,
-        "stdout": completed.stdout[-8000:],
-        "stderr": completed.stderr[-8000:],
-    }
-    return json.dumps(payload, ensure_ascii=False)
+    return await run_bash_command(root, str(args["command"]), int(args.get("timeout", 20)))
 
 
 def _iter_files(base: Path):

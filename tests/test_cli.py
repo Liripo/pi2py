@@ -3,7 +3,7 @@ from __future__ import annotations
 from typer.testing import CliRunner
 
 from pi2py import __version__
-from pi2py.cli import _handle_model_command, app
+from pi2py.cli import _handle_model_command, _run_shell_input, app
 from pi2py.core.agent import Agent, AgentConfig
 from pi2py.core.settings import SettingsStore
 
@@ -49,3 +49,14 @@ def test_model_command_updates_agent_and_settings(tmp_path, monkeypatch) -> None
 
     assert agent.config.model == "deepseek/deepseek-v4-flash"
     assert SettingsStore().load().model == "deepseek/deepseek-v4-flash"
+
+
+def test_shell_input_blocks_rm_rf_root(tmp_path, capsys) -> None:
+    agent = Agent(AgentConfig(model="gpt-4o-mini", cwd=tmp_path))
+
+    import asyncio
+
+    asyncio.run(_run_shell_input(agent, "rm -rf /"))
+
+    captured = capsys.readouterr()
+    assert "rm -rf / is blocked" in captured.out
