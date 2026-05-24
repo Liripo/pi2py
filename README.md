@@ -1,6 +1,6 @@
 # pi2py
 
-`pi2py` 是一个参考 `pi-agent` TypeScript 源码实现的 Python 终端 Coding Agent 骨架。
+`pi2py` 是一个参考 [pi-agent](https://github.com/earendil-works/pi) TypeScript 源码实现的 Python 终端 Coding Agent 骨架。
 
 - `agent core`：负责消息状态、工具调用循环和会话保存
 - `LiteLLM`：统一接入 OpenAI、Anthropic、Gemini、OpenRouter 等模型
@@ -37,12 +37,6 @@ uv run pi2py --model gpt-4o-mini
 
 ```bash
 uv run pi2py -p "Summarize README.md"
-```
-
-JSON 事件流输出：
-
-```bash
-uv run pi2py --mode json -p "Inspect this repo"
 ```
 
 查看内置工具：

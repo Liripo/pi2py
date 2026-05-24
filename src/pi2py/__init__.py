@@ -1,4 +1,4 @@
-"""一个最小可用的 pi 风格 Python Coding Agent。"""
+"""一个可用的 pi-agent 风格 Python Coding Agent。"""
 
 from __future__ import annotations
 
