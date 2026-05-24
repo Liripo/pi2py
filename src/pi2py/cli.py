@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 import typer
+from dotenv import load_dotenv
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.formatted_text import HTML
@@ -15,7 +16,11 @@ from pi2py import __version__
 from pi2py.core.agent import Agent, AgentConfig
 from pi2py.core.session import SessionStore
 
-app = typer.Typer(no_args_is_help=False, add_completion=False)
+app = typer.Typer(
+    no_args_is_help=False,
+    add_completion=False,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 
 
 def version_callback(value: bool) -> None:
@@ -31,18 +36,17 @@ def main(
     mode: Annotated[Literal["text", "json"], typer.Option(help="--print 的输出模式。")] = "text",
     model: Annotated[str, typer.Option("--model", "-m", help="LiteLLM 模型名称。")] = "gpt-4o-mini",
     cwd: Annotated[Path, typer.Option("--cwd", help="工作区目录。")] = Path.cwd(),
-    save_session: Annotated[bool, typer.Option("--session/--no-session", help="是否保存会话。")] = True,
-    allow_bash: Annotated[bool, typer.Option("--bash/--no-bash", help="是否启用 bash 工具。")] = True,
     version: Annotated[
         bool | None,
         typer.Option("--version", callback=version_callback, is_eager=True, help="显示版本并退出。"),
     ] = None,
 ) -> None:
+    load_dotenv()
     if ctx.invoked_subcommand is not None:
         return
-    config = AgentConfig(model=model, cwd=cwd, allow_bash=allow_bash)
-    store = SessionStore.create_default(cwd) if save_session else None
-    agent = Agent(config, session_store=store)
+
+    config = AgentConfig(model=model, cwd=cwd)
+    agent = Agent(config, session_store=SessionStore.create_default(cwd))
     if prompt is not None:
         stdin = _read_stdin_if_piped()
         merged = f"{stdin}\n\n{prompt}" if stdin else prompt

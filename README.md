@@ -1,8 +1,6 @@
 # pi2py
 
-`pi2py` 是一个参考 `./pi` TypeScript 源码实现的 Python 终端 Coding Agent 骨架。
-
-当前版本聚焦于可运行、可扩展的最小核心：
+`pi2py` 是一个参考 `pi-agent` TypeScript 源码实现的 Python 终端 Coding Agent 骨架。
 
 - `agent core`：负责消息状态、工具调用循环和会话保存
 - `LiteLLM`：统一接入 OpenAI、Anthropic、Gemini、OpenRouter 等模型
@@ -15,8 +13,8 @@
 
 ```bash
 uv sync
-uv run pi2py --help
-uv run pi2py -p "Say hello"
+uv run pi2py -h
+uv run pi2py -p "你好"
 uv run pi2py
 ```
 
