@@ -38,7 +38,7 @@ def main(
     cwd: Annotated[Path, typer.Option("--cwd", help="工作区目录。")] = Path.cwd(),
     version: Annotated[
         bool | None,
-        typer.Option("--version", callback=version_callback, is_eager=True, help="显示版本并退出。"),
+        typer.Option("--version", "-v", callback=version_callback, is_eager=True, help="显示版本并退出。"),
     ] = None,
 ) -> None:
     load_dotenv()

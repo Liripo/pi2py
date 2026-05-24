@@ -20,3 +20,10 @@ def test_version_comes_from_package_metadata() -> None:
 
     assert result.exit_code == 0
     assert result.output.strip() == __version__
+
+
+def test_short_version_option() -> None:
+    result = CliRunner().invoke(app, ["-v"])
+
+    assert result.exit_code == 0
+    assert result.output.strip() == __version__
