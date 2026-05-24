@@ -14,6 +14,7 @@ class ChatMessage:
     tool_call_id: str | None = None
     name: str | None = None
     tool_calls: list[dict[str, Any]] | None = None
+    reasoning_content: str | None = None
 
     def to_litellm(self) -> dict[str, Any]:
         data: dict[str, Any] = {"role": self.role}
@@ -25,6 +26,8 @@ class ChatMessage:
             data["name"] = self.name
         if self.tool_calls:
             data["tool_calls"] = self.tool_calls
+        if self.reasoning_content:
+            data["reasoning_content"] = self.reasoning_content
         return data
 
     @classmethod
@@ -32,7 +35,13 @@ class ChatMessage:
         role = _get(data, "role") or "assistant"
         content = _get(data, "content")
         tool_calls = _get(data, "tool_calls")
-        return cls(role=role, content=content, tool_calls=_normalize_tool_calls(tool_calls))
+        reasoning_content = _get(data, "reasoning_content")
+        return cls(
+            role=role,
+            content=content,
+            tool_calls=_normalize_tool_calls(tool_calls),
+            reasoning_content=reasoning_content,
+        )
 
 
 @dataclass
@@ -67,4 +76,3 @@ def _normalize_tool_calls(tool_calls: Any) -> list[dict[str, Any]] | None:
             }
         )
     return normalized
-

@@ -1,13 +1,14 @@
 [project]
 name = "pi2py"
 version = "0.1.0"
-description = "参考 pi-agent 实现的 Python 终端 Coding Agent。"
+description = "Python terminal coding agent inspired by pi-agent."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "litellm>=1.60.0",
     "prompt-toolkit>=3.0.48",
     "python-dotenv>=1.0.1",
+    "rich>=13.9.0",
     "typer>=0.12.5",
 ]
 
