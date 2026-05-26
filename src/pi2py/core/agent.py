@@ -101,6 +101,14 @@ class Agent:
 
         return ChatMessage(role="tool", name=name, tool_call_id=call_id, content=content)
 
+    def resume_session(self, path: Path) -> None:
+        self.session_store = SessionStore(path)
+        self.session = self.session_store.load()
+        if self.session.messages and self.session.messages[0].role == "system":
+            self.session.messages[0] = ChatMessage(role="system", content=self._system_prompt())
+        else:
+            self.session.messages.insert(0, ChatMessage(role="system", content=self._system_prompt()))
+
     def _save(self) -> None:
         if self.session_store:
             self.session_store.save(self.session)

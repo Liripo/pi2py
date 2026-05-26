@@ -66,10 +66,3 @@ uv run pi2py tools
 - `src/pi2py/core/settings.py`：保存上次使用的模型等本地设置
 - `tests/`：使用 Fake LLM 验证工具调用循环，不依赖真实网络
 
-## 后续方向
-
-- 支持恢复、分叉和导出历史会话
-- 增加项目上下文文件加载，例如 `AGENTS.md` 或 `.pi2py/SYSTEM.md`
-- 支持流式输出和更完整的事件协议
-- 增加更细粒度的工具权限确认策略
-- 扩展 slash commands，例如 `/compact`、`/export`

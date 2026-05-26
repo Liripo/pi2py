@@ -1,6 +1,6 @@
 [project]
 name = "pi2py"
-version = "0.5.0"
+version = "0.7.0"
 description = "参考 pi-agent 实现的 Python 终端 Coding Agent。"
 readme = "README.md"
 requires-python = ">=3.11"
