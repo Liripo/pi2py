@@ -14,6 +14,7 @@ from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import InMemoryHistory
 
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -99,7 +100,7 @@ async def _run_print(agent: Agent, prompt: str, mode: str) -> int:
             async for event in agent.run_events(prompt):
                 print(json.dumps({"type": event.type, **event.data}, ensure_ascii=False), flush=True)
         else:
-            _console().print(await agent.run(prompt))
+            _console().print(Markdown(await agent.run(prompt)))
         return 0
     except Exception as exc:
         _console(stderr=True).print(f"[red]{exc}[/red]")
@@ -140,7 +141,7 @@ async def _run_interactive(agent: Agent) -> None:
             continue
         async for event in agent.run_events(text):
             if event.type == "assistant_message" and event.data.get("content"):
-                _console().print(event.data["content"])
+                _console().print(Markdown(event.data["content"]))
             elif event.type == "tool_result":
                 name = event.data.get("name")
                 content = str(event.data.get("content", ""))
@@ -222,10 +223,11 @@ def _show_resumed_session(agent: Agent) -> None:
     for msg in msgs:
         if msg.role not in ("user", "assistant"):
             continue
-        icon = "◀" if msg.role == "user" else "▶"
-        color = "green" if msg.role == "user" else "white"
-        text = (msg.content or "")[:300].replace("\n", " ")
-        console.print(f"[{color}]{icon} {text}[/{color}]")
+        if msg.role == "user":
+            text = (msg.content or "")[:300].replace("\n", " ")
+            console.print(f"[green]◀ {text}[/green]")
+        else:
+            console.print(Markdown(msg.content or ""))
 
 
 def _handle_session_resume(agent: Agent, text: str) -> None:
